@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RAFALU — Elegância para todos os momentos</title>
+  <meta name="description" content="RAFALU — vitrine digital de looks femininos. Conheça as combinações da coleção e fale conosco pelo WhatsApp." />
+
+  <!-- Open Graph básico -->
+  <meta property="og:title" content="RAFALU" />
+  <meta property="og:description" content="Elegância para todos os momentos. Conheça os looks da RAFALU." />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="assets/logo.png" />
+
+  <link rel="icon" href="assets/logo.png" type="image/png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header class="site-header" id="topo">
+    <div class="header-inner">
+      <a class="brand" href="#topo" aria-label="RAFALU — início">
+        <img src="assets/logo.png" alt="Logo RAFALU" class="brand-logo" />
+        <span class="brand-name">RAFALU</span>
+      </a>
+
+      <button class="menu-toggle" id="menuToggle" aria-expanded="false" aria-controls="menuPrincipal" aria-label="Abrir menu">
+        <span></span><span></span><span></span>
+      </button>
+
+      <nav class="main-nav" id="menuPrincipal">
+        <ul>
+          <li><a href="#topo" class="nav-link">Início</a></li>
+          <li><a href="#looks" class="nav-link">Looks</a></li>
+          <li><a href="#sobre" class="nav-link">Sobre</a></li>
+          <li><a href="#instagram" class="nav-link">Instagram</a></li>
+          <li><a href="#contato" class="nav-link">Contato</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- HERO -->
+    <section class="hero" aria-label="Apresentação RAFALU">
+      <div class="hero-inner">
+        <p class="hero-eyebrow">Moda feminina</p>
+        <h1 class="hero-title">RAFALU</h1>
+        <p class="hero-tagline">Elegância para todos os momentos.</p>
+        <div class="hero-actions">
+          <a href="#looks" class="btn btn-primary">Ver looks</a>
+          <a href="#contato" class="btn btn-ghost">Fale conosco</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- LOOKS -->
+    <section class="looks-section" id="looks" aria-label="Nossos looks">
+      <div class="section-inner">
+        <div class="section-heading">
+          <h2>Conheça nossos looks</h2>
+          <p class="section-subtitle">Uma seleção de inspirações e combinações disponíveis na loja. Fale conosco para consultar detalhes de cada peça.</p>
+        </div>
+
+        <div class="filters" id="filters" role="tablist" aria-label="Filtrar looks por categoria">
+          <!-- gerado via JS a partir de CATEGORIES -->
+        </div>
+
+        <div class="looks-grid" id="looksGrid">
+          <!-- gerado via JS a partir de LOOKS -->
+        </div>
+
+        <p class="looks-empty" id="looksEmpty" hidden>Nenhum look encontrado nesta categoria no momento.</p>
+      </div>
+    </section>
+
+    <!-- SOBRE -->
+    <section class="about-section" id="sobre" aria-label="Sobre a RAFALU">
+      <div class="section-inner about-inner">
+        <div class="about-text">
+          <h2>Sobre a RAFALU</h2>
+          <p>
+            A RAFALU reúne looks e peças de moda feminina pensados para diferentes momentos do dia a dia.
+            Nosso objetivo é apresentar combinações com identidade própria, unindo simplicidade e sofisticação.
+          </p>
+          <p>
+            Cada look apresentado aqui é um ponto de partida. Para saber mais sobre disponibilidade,
+            valores e detalhes de cada peça, fale diretamente conosco pelo WhatsApp.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- INSTAGRAM -->
+    <section class="instagram-section" id="instagram" aria-label="Instagram da RAFALU">
+      <div class="section-inner instagram-inner">
+        <h2>Acompanhe a RAFALU no Instagram</h2>
+        <p>Novos looks, bastidores e novidades da coleção — tudo por lá.</p>
+        <a href="#" id="instagramLink" class="btn btn-outline-light" target="_blank" rel="noopener">Ver Instagram</a>
+      </div>
+    </section>
+
+    <!-- WHATSAPP / CONTATO -->
+    <section class="contact-section" id="contato" aria-label="Contato via WhatsApp">
+      <div class="section-inner contact-inner">
+        <h2>Gostou de algum look?</h2>
+        <p>Fale conosco pelo WhatsApp para consultar disponibilidade, valores e detalhes.</p>
+        <a href="#" id="whatsappLink" class="btn btn-primary" target="_blank" rel="noopener">Falar no WhatsApp</a>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <img src="assets/logo.png" alt="Logo RAFALU" class="footer-logo" />
+        <span>RAFALU</span>
+      </div>
+      <ul class="footer-links">
+        <li><a href="#instagram" id="footerInstagram">Instagram</a></li>
+        <li><a href="#contato" id="footerWhatsapp">WhatsApp</a></li>
+        <li><a href="#topo">Início</a></li>
+      </ul>
+      <p class="footer-copy">&copy; <span id="anoAtual"></span> RAFALU. Todos os direitos reservados.</p>
+    </div>
+  </footer>
+
+  <script src="main.js"></script>
+</body>
+</html>
