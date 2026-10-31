@@ -5,11 +5,9 @@
    As seções estão organizadas assim:
 
    1. CONFIGURAÇÃO GERAL (WhatsApp / Instagram)
-   2. CATEGORIAS
-   3. DADOS DOS LOOKS
-   4. FUNÇÕES DE ACESSO AOS DADOS (pensadas para futura migração para API)
-   5. RENDERIZAÇÃO DA INTERFACE
-   6. INTERAÇÕES (filtros, menu mobile, WhatsApp)
+   2. ACESSO AOS DADOS (Supabase: categorias e looks publicados)
+   3. RENDERIZAÇÃO DA INTERFACE
+   4. INTERAÇÕES (filtros, estados da vitrine, menu mobile, WhatsApp)
    ========================================================================== */
 
 
@@ -31,105 +29,93 @@ const WHATSAPP_DEFAULT_MESSAGE = "Olá! Vi o site da RAFALU e gostaria de mais i
 
 
 /* --------------------------------------------------------------------------
-   2. CATEGORIAS
-   -------------------------------------------------------------------------- */
-// Os nomes das categorias podem ser alterados livremente aqui.
-// "id" é usado internamente para filtrar; "label" é o texto exibido.
-const CATEGORIES = [
-  { id: "todos", label: "Todos" },
-  { id: "casual", label: "Casual" },
-  { id: "social", label: "Social" },
-  { id: "elegante", label: "Elegante" },
-  { id: "completo", label: "Looks completos" },
-];
-
-
-/* --------------------------------------------------------------------------
-   3. DADOS DOS LOOKS
-   -------------------------------------------------------------------------- */
-// IMPORTANTE: nenhuma informação de preço, tamanho ou disponibilidade é
-// cadastrada aqui de propósito — essas informações devem ser tratadas
-// diretamente pelo WhatsApp. As imagens abaixo são placeholders (assets/looks)
-// e devem ser substituídas por fotos reais dos looks.
-const LOOKS = [
-  {
-    id: 1,
-    name: "Look Elegance",
-    category: "elegante",
-    description: "Uma combinação elegante para diferentes ocasiões.",
-    image: "look-1.jpg",
-  },
-  {
-    id: 2,
-    name: "Look Essencial",
-    category: "casual",
-    description: "Peças simples e versáteis para o dia a dia.",
-    image: "look-2.jpg",
-  },
-  {
-    id: 3,
-    name: "Look Noite",
-    category: "social",
-    description: "Combinação pensada para eventos e encontros especiais.",
-    image: "look-3.jpg",
-  },
-  {
-    id: 4,
-    name: "Look Leveza",
-    category: "casual",
-    description: "Conforto e estilo em uma composição descontraída.",
-    image: "look-4.jpg",
-  },
-  {
-    id: 5,
-    name: "Look Presença",
-    category: "completo",
-    description: "Um conjunto completo para quem quer causar impacto.",
-    image: "look-5.jpg",
-  },
-  {
-    id: 6,
-    name: "Look Refinado",
-    category: "social",
-    description: "Sofisticação discreta para compromissos importantes.",
-    image: "look-6.jpg",
-  },
-];
-
-
-/* --------------------------------------------------------------------------
-   4. FUNÇÕES DE ACESSO AOS DADOS
+   2. ACESSO AOS DADOS (Supabase)
    --------------------------------------------------------------------------
-   Hoje estas funções apenas leem o array local LOOKS/CATEGORIES.
-   No futuro, quando existir uma API REST, basta trocar o corpo destas
-   funções por chamadas fetch() — o restante do código (renderização,
-   filtros, etc.) não precisa mudar, pois ele sempre consome estas funções
-   e não o array diretamente.
+   Os looks e as categorias vêm do banco. A vitrine SÓ LÊ dados, usando a chave
+   pública (publishable) definida em supabase-config.js. Essa chave é segura no
+   navegador porque as regras do banco (RLS) permitem a visitantes ler apenas
+   itens publicados. NUNCA coloque aqui a chave "secret" ou "service_role".
 
-   Exemplo de evolução futura:
-
-     async function getLooks() {
-       const res = await fetch("/api/looks");
-       return res.json();
-     }
-
+   Usamos fetch() direto na API REST (sem biblioteca extra) para a página ficar
+   leve. As duas funções abaixo continuam devolvendo o MESMO formato de antes,
+   por isso filtros, cards e botões não precisaram mudar.
    -------------------------------------------------------------------------- */
 
-async function getLooks() {
-  // Hoje: retorna os dados locais.
-  // Futuro: return fetch("/api/looks").then(r => r.json());
-  return Promise.resolve(LOOKS);
+const REQUEST_TIMEOUT_MS = 10000; // depois disso a vitrine mostra a mensagem de erro
+const MAX_LOOKS = 100;            // limite de segurança da consulta
+
+class DataError extends Error {}
+
+function supabaseSettings() {
+  const cfg = window.RAFALU_CONFIG || {};
+  if (!cfg.SUPABASE_URL || !cfg.SUPABASE_PUBLISHABLE_KEY) {
+    throw new DataError("Configuração do Supabase ausente (supabase-config.js).");
+  }
+  return {
+    url: String(cfg.SUPABASE_URL).replace(/\/+$/, ""),
+    key: cfg.SUPABASE_PUBLISHABLE_KEY,
+    bucket: cfg.STORAGE_BUCKET || "product-images",
+  };
 }
 
+async function fetchRows(pathAndQuery) {
+  const { url, key } = supabaseSettings();
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  try {
+    // Só o cabeçalho "apikey": visitante anônimo, sem token de login.
+    const res = await fetch(`${url}/rest/v1/${pathAndQuery}`, {
+      headers: { apikey: key, Accept: "application/json" },
+      signal: controller.signal,
+    });
+    if (!res.ok) throw new DataError(`Resposta ${res.status} do servidor.`);
+    const rows = await res.json();
+    if (!Array.isArray(rows)) throw new DataError("Resposta inesperada do servidor.");
+    return rows;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+function photoUrl(imagePath) {
+  const { url, bucket } = supabaseSettings();
+  return `${url}/storage/v1/object/public/${bucket}/${encodeURIComponent(imagePath)}`;
+}
+
+const isText = (v) => typeof v === "string" && v.trim() !== "";
+
+// Looks publicados, do mais recente para o mais antigo.
+// Campos do banco -> campos da vitrine: category_id -> category, image_path -> image.
+async function getLooks() {
+  const rows = await fetchRows(
+    "products?select=id,name,description,category_id,image_path" +
+      "&is_published=eq.true" +
+      "&order=published_at.desc.nullslast,created_at.desc" +
+      `&limit=${MAX_LOOKS}`
+  );
+  return rows
+    .filter((r) => isText(r.name) && isText(r.category_id) && isText(r.image_path))
+    .map((r) => ({
+      id: r.id,
+      name: r.name.trim(),
+      category: r.category_id,
+      description: isText(r.description) ? r.description.trim() : "",
+      image: photoUrl(r.image_path),
+    }));
+}
+
+// "Todos" é criado aqui; as demais categorias vêm do banco, na ordem definida em "position".
 async function getCategories() {
-  // Hoje: retorna os dados locais.
-  // Futuro: return fetch("/api/categories").then(r => r.json());
-  return Promise.resolve(CATEGORIES);
+  const rows = await fetchRows("categories?select=slug,label,position&order=position.asc");
+  return [
+    { id: "todos", label: "Todos" },
+    ...rows.filter((r) => isText(r.slug) && isText(r.label)).map((r) => ({ id: r.slug, label: r.label })),
+  ];
 }
 
 
 /* --------------------------------------------------------------------------
-   5. RENDERIZAÇÃO DA INTERFACE
+   3. RENDERIZAÇÃO DA INTERFACE
    -------------------------------------------------------------------------- */
 
 function buildWhatsappUrl(message) {
@@ -144,7 +130,7 @@ function categoryLabel(categories, id) {
 
 function renderFilters(categories, activeId, onSelect) {
   const container = document.getElementById("filters");
-  container.innerHTML = "";
+  container.replaceChildren();
 
   categories.forEach((cat) => {
     const btn = document.createElement("button");
@@ -158,10 +144,13 @@ function renderFilters(categories, activeId, onSelect) {
   });
 }
 
+// Os textos vêm do banco: por isso os cards são montados com createElement e
+// textContent (nunca innerHTML), para que nenhum texto vire código na página.
 function renderLooks(looks, categories) {
   const grid = document.getElementById("looksGrid");
   const emptyState = document.getElementById("looksEmpty");
-  grid.innerHTML = "";
+  grid.replaceChildren();
+  grid.removeAttribute("aria-busy");
 
   if (looks.length === 0) {
     emptyState.hidden = false;
@@ -171,33 +160,117 @@ function renderLooks(looks, categories) {
 
   looks.forEach((look) => {
     const card = document.createElement("article");
-    card.className = "look-card";
+    card.className = "look-card" + (look.description ? "" : " no-desc");
 
-    const message = `Olá! Tenho interesse no ${look.name}. Pode me passar mais informações?`;
+    const media = document.createElement("div");
+    media.className = "look-media";
 
-    card.innerHTML = `
-      <div class="look-media">
-        <span class="look-category">${categoryLabel(categories, look.category)}</span>
-        <img src="${look.image}" alt="${look.name}" loading="lazy" />
-      </div>
-      <h3 class="look-name">${look.name}</h3>
-      <p class="look-description">${look.description}</p>
-      <a class="btn btn-primary look-cta" target="_blank" rel="noopener" href="${buildWhatsappUrl(message)}">
-        Tenho interesse
-      </a>
-    `;
+    const badge = document.createElement("span");
+    badge.className = "look-category";
+    badge.textContent = categoryLabel(categories, look.category);
 
+    const img = document.createElement("img");
+    img.src = look.image;
+    img.alt = look.name;
+    img.loading = "lazy";
+    img.decoding = "async";
+    img.addEventListener("error", () => {
+      const fallback = document.createElement("span");
+      fallback.className = "look-photo-missing";
+      fallback.textContent = "Foto indisponível";
+      img.replaceWith(fallback);
+    });
+    media.append(badge, img);
+
+    const name = document.createElement("h3");
+    name.className = "look-name";
+    name.textContent = look.name;
+
+    const cta = document.createElement("a");
+    cta.className = "btn btn-primary look-cta";
+    cta.target = "_blank";
+    cta.rel = "noopener";
+    cta.href = buildWhatsappUrl(`Olá! Tenho interesse no ${look.name}. Pode me passar mais informações?`);
+    cta.textContent = "Tenho interesse";
+
+    card.append(media, name);
+    if (look.description) {
+      const desc = document.createElement("p");
+      desc.className = "look-description";
+      desc.textContent = look.description;
+      card.append(desc);
+    }
+    card.append(cta);
     grid.appendChild(card);
   });
 }
 
+// Blocos cinza com o mesmo formato dos cards, enquanto os dados carregam.
+function renderSkeleton() {
+  const grid = document.getElementById("looksGrid");
+  grid.replaceChildren();
+  grid.setAttribute("aria-busy", "true");
+  for (let i = 0; i < 6; i++) {
+    const box = document.createElement("div");
+    box.className = "look-skeleton";
+    box.setAttribute("aria-hidden", "true");
+    grid.appendChild(box);
+  }
+}
+
+// Mensagem no lugar da lista: vitrine vazia ou falha de conexão.
+// kind: "empty" | "error". Nunca mostra looks de exemplo.
+function showLooksState(kind, onRetry) {
+  const box = document.getElementById("looksState");
+  const text = document.getElementById("looksStateText");
+  const retry = document.getElementById("looksRetry");
+  document.getElementById("looksGrid").replaceChildren();
+  document.getElementById("looksGrid").removeAttribute("aria-busy");
+  document.getElementById("filters").replaceChildren();
+  document.getElementById("looksEmpty").hidden = true;
+
+  if (kind === "empty") {
+    text.textContent = "Estamos preparando novos looks. Fale conosco pelo WhatsApp para saber as novidades.";
+    retry.hidden = true;
+  } else {
+    text.textContent = "Não foi possível carregar os looks agora. Confira sua conexão e tente de novo, ou fale conosco pelo WhatsApp.";
+    retry.hidden = false;
+    retry.onclick = onRetry;
+  }
+  document.getElementById("looksStateWhatsapp").href = buildWhatsappUrl(WHATSAPP_DEFAULT_MESSAGE);
+  box.hidden = false;
+}
+
+function hideLooksState() {
+  document.getElementById("looksState").hidden = true;
+}
+
 
 /* --------------------------------------------------------------------------
-   6. INTERAÇÕES
+   4. INTERAÇÕES
    -------------------------------------------------------------------------- */
 
 async function initLooksSection() {
-  const [looks, categories] = await Promise.all([getLooks(), getCategories()]);
+  hideLooksState();
+  renderSkeleton();
+
+  let looks, categories;
+  try {
+    [looks, categories] = await Promise.all([getLooks(), getCategories()]);
+  } catch (err) {
+    console.error("Falha ao carregar a vitrine:", err);
+    showLooksState("error", initLooksSection);
+    return;
+  }
+
+  if (looks.length === 0) {
+    showLooksState("empty");
+    return;
+  }
+
+  // Só aparecem os botões de categorias que têm pelo menos um look publicado.
+  const used = new Set(looks.map((l) => l.category));
+  const visibleCategories = categories.filter((c) => c.id === "todos" || used.has(c.id));
 
   let activeCategory = "todos";
 
@@ -206,7 +279,7 @@ async function initLooksSection() {
     const filtered =
       categoryId === "todos" ? looks : looks.filter((l) => l.category === categoryId);
 
-    renderFilters(categories, activeCategory, applyFilter);
+    renderFilters(visibleCategories, activeCategory, applyFilter);
     renderLooks(filtered, categories);
   }
 

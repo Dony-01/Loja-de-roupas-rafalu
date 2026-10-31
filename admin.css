@@ -1,0 +1,196 @@
+/* ==========================================================================
+   RAFALU — admin.css (painel administrativo)
+   Usa as mesmas cores e fontes da vitrine, mas é um arquivo à parte:
+   o style.css do site público não é tocado.
+   ========================================================================== */
+:root {
+  --ink: #171412;
+  --ink-soft: #241f1c;
+  --ivory: #F3EFE7;
+  --ivory-deep: #E9E1D3;
+  --bronze: #A9895C;
+  --danger: #8A2B2B;
+  --danger-bg: #F4E3E1;
+  --ok: #2F5D3A;
+  --line: rgba(23, 20, 18, 0.14);
+  --muted: rgba(23, 20, 18, 0.66);
+  --font-display: 'Fraunces', Georgia, 'Times New Roman', serif;
+  --font-body: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --gutter: clamp(16px, 4vw, 40px);
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  color: var(--ink);
+  background: var(--ivory);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2 { font-family: var(--font-display); font-weight: 500; line-height: 1.15; margin: 0; }
+p { margin: 0; }
+img { max-width: 100%; display: block; }
+a { color: inherit; }
+
+:focus-visible { outline: 2px solid var(--bronze); outline-offset: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+
+/* ---------- botões ---------- */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-height: 44px; padding: 10px 20px;
+  font: 600 0.95rem var(--font-body);
+  border: 1px solid transparent; border-radius: 2px;
+  cursor: pointer; text-align: center;
+  transition: background-color .15s ease, color .15s ease, border-color .15s ease;
+}
+.btn[disabled] { opacity: .55; cursor: not-allowed; }
+.btn-primary { background: var(--ink); color: var(--ivory); border-color: var(--ink); }
+.btn-primary:not([disabled]):hover { background: var(--ink-soft); }
+.btn-ghost { background: transparent; color: var(--ink); border-color: var(--ink); }
+.btn-ghost:not([disabled]):hover { background: var(--ink); color: var(--ivory); }
+.btn-danger { background: var(--danger); color: #fff; border-color: var(--danger); }
+.btn-danger-quiet { background: transparent; color: var(--danger); border-color: transparent; text-decoration: underline; padding-inline: 8px; }
+.btn-small { min-height: 40px; padding: 6px 14px; font-size: .85rem; }
+.btn-block { width: 100%; }
+.icon-btn { width: 44px; height: 44px; font-size: 1.8rem; line-height: 1; background: none; border: none; cursor: pointer; color: var(--ink); }
+
+/* ---------- telas simples (carregando, login, erro, sem permissão) ---------- */
+.screen { min-height: 100vh; display: grid; place-items: center; padding: 24px var(--gutter); }
+.card-box { width: 100%; max-width: 420px; background: #fff; border: 1px solid var(--line); padding: 32px 28px; }
+.login-logo { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; margin-bottom: 18px; }
+.screen-title { font-size: 1.7rem; margin-bottom: 8px; }
+.screen-note { color: var(--muted); margin-bottom: 18px; }
+.row { display: flex; gap: 12px; flex-wrap: wrap; }
+
+/* ---------- formulário ---------- */
+.field { margin: 0 0 18px; padding: 0; border: 0; min-width: 0; }
+.field label, .field legend { display: block; font-weight: 600; font-size: .9rem; margin-bottom: 6px; padding: 0; }
+.optional { font-weight: 400; color: var(--muted); }
+input[type="text"], input[type="email"], input[type="password"], textarea, select {
+  width: 100%; min-height: 46px; padding: 10px 12px;
+  font: 400 1rem var(--font-body); color: var(--ink);
+  background: #fff; border: 1px solid rgba(23,20,18,.35); border-radius: 2px;
+}
+textarea { resize: vertical; min-height: 84px; }
+input[type="file"] { width: 100%; font: 400 .9rem var(--font-body); }
+.hint { font-size: .8rem; color: var(--muted); margin-top: 6px; }
+.form-error {
+  background: var(--danger-bg); color: var(--danger);
+  border-left: 3px solid var(--danger);
+  padding: 10px 12px; margin: 0 0 16px; font-size: .9rem;
+}
+.field .form-error { margin: 8px 0 0; }
+
+.segmented { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.segmented label { margin: 0; font-weight: 500; }
+.segmented input { position: absolute; opacity: 0; pointer-events: none; }
+.segmented span {
+  display: flex; align-items: center; justify-content: center; text-align: center;
+  min-height: 46px; padding: 8px 10px;
+  border: 1px solid rgba(23,20,18,.35); background: #fff; cursor: pointer; border-radius: 2px;
+}
+.segmented input:checked + span { background: var(--ink); color: var(--ivory); border-color: var(--ink); }
+.segmented input:focus-visible + span { outline: 2px solid var(--bronze); outline-offset: 2px; }
+
+.photo-box { display: grid; grid-template-columns: 110px 1fr; gap: 14px; align-items: start; }
+.photo-preview {
+  aspect-ratio: 3 / 4; background: var(--ivory-deep); border: 1px solid var(--line);
+  display: grid; place-items: center; overflow: hidden;
+}
+.photo-preview img { width: 100%; height: 100%; object-fit: cover; }
+.photo-empty { font-size: .75rem; color: var(--muted); padding: 4px; text-align: center; }
+
+/* ---------- janelas (dialog) ---------- */
+dialog {
+  width: min(560px, 100%); max-height: 100dvh; padding: 0; border: 0;
+  background: var(--ivory); color: var(--ink);
+  box-shadow: 0 20px 60px rgba(0,0,0,.35);
+}
+dialog::backdrop { background: rgba(23,20,18,.55); }
+.dialog-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 8px 10px 22px; border-bottom: 1px solid var(--line); }
+.dialog-head h2 { font-size: 1.35rem; }
+.dialog-body { padding: 20px 22px 6px; overflow-y: auto; }
+.dialog-foot {
+  display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
+  padding: 14px 22px 18px; border-top: 1px solid var(--line); background: var(--ivory);
+}
+.spacer { flex: 1 1 auto; }
+#formDialog form { display: flex; flex-direction: column; max-height: 100dvh; }
+#formDialog .dialog-body { flex: 1 1 auto; }
+
+/* ---------- painel ---------- */
+.app-header { background: var(--ink); color: var(--ivory); }
+.app-header-inner { max-width: 1180px; margin: 0 auto; padding: 12px var(--gutter); display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.brand { display: flex; align-items: center; gap: 10px; }
+.brand-logo { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; }
+.brand-name { font-family: var(--font-display); font-size: 1.15rem; }
+.header-right { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.user-email { font-size: .8rem; opacity: .75; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.link-quiet { font-size: .85rem; text-decoration: underline; padding: 10px 2px; }
+.app-header .btn-ghost { color: var(--ivory); border-color: rgba(243,239,231,.45); }
+.app-header .btn-ghost:not([disabled]):hover { background: var(--ivory); color: var(--ink); }
+
+.app-main { max-width: 1180px; margin: 0 auto; padding: 24px var(--gutter) 64px; }
+.toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
+.page-title { font-size: clamp(1.5rem, 4vw, 2rem); }
+
+.tabs { display: flex; gap: 6px 22px; flex-wrap: wrap; border-bottom: 1px solid var(--line); margin-bottom: 20px; }
+.tab { background: none; border: none; padding: 10px 0 12px; min-height: 44px; font: 600 .92rem var(--font-body); color: var(--muted); cursor: pointer; position: relative; }
+.tab[aria-pressed="true"] { color: var(--ink); }
+.tab[aria-pressed="true"]::after { content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; background: var(--ink); }
+.tab-count { font-weight: 500; opacity: .7; margin-left: 2px; }
+
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(155px, 1fr)); gap: 14px; }
+@media (min-width: 720px) { .grid { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 22px; } }
+
+.item { display: flex; flex-direction: column; background: #fff; border: 1px solid var(--line); }
+.item-media { position: relative; aspect-ratio: 3 / 4; background: var(--ivory-deep); overflow: hidden; }
+.item-media img { width: 100%; height: 100%; object-fit: cover; }
+.item.is-out .item-media img { filter: grayscale(.85); opacity: .7; }
+.item-noimg { position: absolute; inset: 0; display: grid; place-items: center; color: var(--muted); font-size: .8rem; }
+.pill {
+  position: absolute; top: 8px; left: 8px;
+  font-size: .7rem; font-weight: 700; padding: 4px 8px;
+  background: var(--ivory); color: var(--ink); border: 1px solid var(--ink);
+}
+.pill.on { background: var(--ink); color: var(--ivory); }
+.item-body { padding: 12px 12px 8px; flex: 1 1 auto; }
+.item-name { font-family: var(--font-display); font-size: 1.05rem; line-height: 1.2; margin-bottom: 6px; overflow-wrap: anywhere; }
+.item-meta { font-size: .78rem; color: var(--muted); }
+.item-actions { display: grid; gap: 8px; padding: 8px 12px 12px; }
+.item-actions .btn { min-height: 44px; padding: 8px 10px; font-size: .85rem; }
+
+/* ---------- avisos rápidos ---------- */
+.toasts { position: fixed; left: 0; right: 0; bottom: 16px; display: grid; justify-items: center; gap: 8px; padding: 0 16px; z-index: 1000; pointer-events: none; }
+.toast {
+  pointer-events: auto; max-width: 520px; width: 100%;
+  background: var(--ink); color: var(--ivory);
+  padding: 12px 14px; font-size: .9rem; display: flex; gap: 12px; align-items: flex-start; justify-content: space-between;
+  box-shadow: 0 8px 28px rgba(0,0,0,.3);
+}
+.toast.error { background: var(--danger); color: #fff; }
+.toast button { background: none; border: none; color: inherit; font-size: 1.2rem; line-height: 1; cursor: pointer; min-width: 32px; min-height: 32px; }
+
+/* ---------- celular ---------- */
+@media (max-width: 560px) {
+  /* O navegador limita a largura de <dialog> por padrão; aqui queremos tela cheia. */
+  dialog { width: 100%; max-width: 100%; height: 100dvh; max-height: 100dvh; margin: 0; }
+  #formDialog form { height: 100dvh; }
+  /* Rodapé compacto: o "×" do topo já cancela; os botões de salvar dividem a linha. */
+  #btnCancel { display: none; }
+  .dialog-foot { gap: 8px; padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); }
+  .dialog-foot .btn { flex: 1 1 140px; padding-inline: 10px; }
+  .dialog-foot .btn-danger-quiet { order: 5; flex: 1 1 100%; min-height: 44px; }
+  .dialog-body { padding: 16px 16px 4px; }
+  .dialog-head { padding-left: 16px; }
+  .user-email { display: none; }
+  .photo-box { grid-template-columns: 96px 1fr; }
+}

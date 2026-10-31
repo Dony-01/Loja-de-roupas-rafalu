@@ -17,7 +17,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css?v=2" />
 </head>
 <body>
 
@@ -69,11 +69,20 @@
         </div>
 
         <div class="filters" id="filters" role="tablist" aria-label="Filtrar looks por categoria">
-          <!-- gerado via JS a partir de CATEGORIES -->
+          <!-- gerado via JS a partir das categorias do Supabase -->
         </div>
 
         <div class="looks-grid" id="looksGrid">
-          <!-- gerado via JS a partir de LOOKS -->
+          <!-- gerado via JS a partir dos looks publicados no Supabase -->
+        </div>
+
+        <!-- Vitrine vazia ou falha de conexão (preenchido e exibido via JS) -->
+        <div class="looks-state" id="looksState" role="status" hidden>
+          <p id="looksStateText"></p>
+          <div class="looks-state-actions">
+            <button type="button" class="btn btn-ghost" id="looksRetry" hidden>Tentar de novo</button>
+            <a class="btn btn-primary" id="looksStateWhatsapp" href="#" target="_blank" rel="noopener">Falar no WhatsApp</a>
+          </div>
         </div>
 
         <p class="looks-empty" id="looksEmpty" hidden>Nenhum look encontrado nesta categoria no momento.</p>
@@ -133,6 +142,7 @@
     </div>
   </footer>
 
-  <script src="main.js"></script>
+  <script src="supabase-config.js?v=2"></script>
+  <script src="main.js?v=2"></script>
 </body>
 </html>

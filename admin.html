@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Painel RAFALU</title>
+  <!-- Painel administrativo: não deve aparecer em buscas nem vazar o endereço ao clicar em links. -->
+  <meta name="robots" content="noindex, nofollow" />
+  <meta name="referrer" content="no-referrer" />
+
+  <link rel="icon" href="logo.png" type="image/png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="admin.css" />
+</head>
+<body>
+
+  <!-- Estado: carregando -->
+  <main class="screen" id="viewLoading" aria-live="polite">
+    <p class="screen-note">Carregando…</p>
+  </main>
+
+  <!-- Estado: erro geral (biblioteca não carregou, sem conexão ao verificar permissão...) -->
+  <main class="screen" id="viewError" hidden>
+    <div class="card-box">
+      <h1 class="screen-title">Não foi possível abrir o painel</h1>
+      <p id="errorText" class="screen-note"></p>
+      <div class="row">
+        <button type="button" class="btn btn-primary" id="btnRetry">Tentar de novo</button>
+        <button type="button" class="btn btn-ghost" id="btnErrorLogout" hidden>Sair</button>
+      </div>
+    </div>
+  </main>
+
+  <!-- Login -->
+  <main class="screen" id="viewLogin" hidden>
+    <div class="card-box">
+      <img src="logo.png" alt="Logo RAFALU" class="login-logo" width="56" height="56" />
+      <h1 class="screen-title">Painel RAFALU</h1>
+      <p class="screen-note">Entre para gerenciar os looks da vitrine.</p>
+
+      <form id="loginForm" novalidate>
+        <div class="field">
+          <label for="loginEmail">E-mail</label>
+          <input type="email" id="loginEmail" autocomplete="username" inputmode="email" required />
+        </div>
+        <div class="field">
+          <label for="loginPassword">Senha</label>
+          <input type="password" id="loginPassword" autocomplete="current-password" required />
+        </div>
+        <p class="form-error" id="loginError" role="alert" hidden></p>
+        <button type="submit" class="btn btn-primary btn-block" id="btnLogin">Entrar</button>
+      </form>
+    </div>
+  </main>
+
+  <!-- Conta sem permissão -->
+  <main class="screen" id="viewDenied" hidden>
+    <div class="card-box">
+      <h1 class="screen-title">Conta sem permissão</h1>
+      <p class="screen-note">
+        Você entrou como <strong id="deniedEmail"></strong>, mas esta conta não tem
+        autorização para administrar a vitrine. Entre com outra conta ou fale com quem
+        configurou o painel.
+      </p>
+      <button type="button" class="btn btn-primary" id="btnDeniedLogout">Sair</button>
+    </div>
+  </main>
+
+  <!-- Painel -->
+  <div id="viewApp" hidden>
+    <header class="app-header">
+      <div class="app-header-inner">
+        <div class="brand">
+          <img src="logo.png" alt="" class="brand-logo" width="36" height="36" />
+          <span class="brand-name">Painel RAFALU</span>
+        </div>
+        <div class="header-right">
+          <span class="user-email" id="userEmail"></span>
+          <a class="link-quiet" href="index.html" target="_blank" rel="noopener">Ver site</a>
+          <button type="button" class="btn btn-ghost btn-small" id="btnLogout">Sair</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="app-main">
+      <div class="toolbar">
+        <h1 class="page-title">Looks e peças</h1>
+        <button type="button" class="btn btn-primary" id="btnNew">Novo item</button>
+      </div>
+
+      <div class="tabs" id="tabs" role="group" aria-label="Filtrar itens">
+        <button type="button" class="tab" data-filter="todos" aria-pressed="true">Todos <span class="tab-count" id="countTodos">0</span></button>
+        <button type="button" class="tab" data-filter="vitrine" aria-pressed="false">Na vitrine <span class="tab-count" id="countVitrine">0</span></button>
+        <button type="button" class="tab" data-filter="fora" aria-pressed="false">Fora da vitrine <span class="tab-count" id="countFora">0</span></button>
+      </div>
+
+      <p class="screen-note" id="listStatus" aria-live="polite"></p>
+      <div class="grid" id="grid"></div>
+    </main>
+  </div>
+
+  <!-- Formulário de cadastro/edição -->
+  <dialog id="formDialog" aria-labelledby="formTitle">
+    <form id="itemForm" novalidate>
+      <div class="dialog-head">
+        <h2 id="formTitle">Novo item</h2>
+        <button type="button" class="icon-btn" id="btnFormClose" aria-label="Fechar">&times;</button>
+      </div>
+
+      <div class="dialog-body">
+        <fieldset class="field">
+          <legend>O que você está cadastrando?</legend>
+          <div class="segmented">
+            <label><input type="radio" name="type" value="look" checked /><span>Look completo</span></label>
+            <label><input type="radio" name="type" value="piece" /><span>Peça individual</span></label>
+          </div>
+        </fieldset>
+
+        <div class="field">
+          <label for="fName">Nome</label>
+          <input type="text" id="fName" maxlength="120" autocomplete="off" required />
+        </div>
+
+        <div class="field">
+          <label for="fDescription">Descrição <span class="optional">(opcional)</span></label>
+          <textarea id="fDescription" rows="3" maxlength="500"></textarea>
+          <p class="hint"><span id="descCount">0</span>/500</p>
+        </div>
+
+        <div class="field">
+          <label for="fCategory">Categoria</label>
+          <select id="fCategory" required></select>
+        </div>
+
+        <div class="field">
+          <label for="fPhoto">Foto</label>
+          <div class="photo-box">
+            <div class="photo-preview" id="photoPreview">
+              <span class="photo-empty" id="photoEmpty">Sem foto</span>
+              <img id="photoImg" alt="Prévia da foto" hidden />
+            </div>
+            <div class="photo-side">
+              <input type="file" id="fPhoto" accept="image/jpeg,image/webp" />
+              <p class="hint" id="photoHint">Formatos aceitos: JPEG ou WebP. A foto é reduzida automaticamente antes do envio.</p>
+              <p class="form-error" id="photoError" role="alert" hidden></p>
+            </div>
+          </div>
+        </div>
+
+        <p class="form-error" id="formError" role="alert" hidden></p>
+      </div>
+
+      <div class="dialog-foot">
+        <button type="button" class="btn btn-danger-quiet" id="btnDelete" hidden>Excluir definitivamente</button>
+        <span class="spacer"></span>
+        <button type="button" class="btn btn-ghost" id="btnCancel">Cancelar</button>
+        <button type="button" class="btn btn-ghost" id="btnSaveDraft">Salvar sem publicar</button>
+        <button type="button" class="btn btn-primary" id="btnSave">Publicar na vitrine</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Confirmação de exclusão definitiva -->
+  <dialog id="deleteDialog" aria-labelledby="deleteTitle">
+    <div class="dialog-head">
+      <h2 id="deleteTitle">Excluir definitivamente?</h2>
+    </div>
+    <div class="dialog-body">
+      <p id="deleteText"></p>
+      <p class="hint">Se o item apenas esgotou, use <strong>Retirar da vitrine</strong>: ele continua salvo e dá para publicar de novo.</p>
+    </div>
+    <div class="dialog-foot">
+      <span class="spacer"></span>
+      <button type="button" class="btn btn-ghost" id="btnDeleteCancel" autofocus>Cancelar</button>
+      <button type="button" class="btn btn-danger" id="btnDeleteConfirm">Excluir definitivamente</button>
+    </div>
+  </dialog>
+
+  <!-- Avisos rápidos -->
+  <div class="toasts" id="toasts" aria-live="polite"></div>
+
+  <!-- Biblioteca oficial do Supabase, em versão FIXA (não troca sozinha). -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.js"></script>
+  <script src="supabase-config.js"></script>
+  <script src="admin.js"></script>
+</body>
+</html>
